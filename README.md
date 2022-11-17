@@ -41,7 +41,7 @@ Via Composer ([`kafoso/doctrine-firebird-driver`](https://packagist.org/packages
 
 Via Github:
 
-    git clone git@github.com:kafoso/doctrine-firebird-driver.git
+    git clone git@github.com:MartinKoeditz/doctrine-firebird-driver.git
 
 ## Configuration
 
@@ -119,6 +119,8 @@ Due to the database being created by the PHP bootstrap script on the fly, `root`
 
 ## Authors
 
+- **Martin Köditz**<br>
+https://github.com/MartinKoeditz
 - **Kasper Søfren**<br>
 https://github.com/kafoso<br>
 E-mail: soefritz@gmail.com
