@@ -15,14 +15,34 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
 
     protected $_entityManager;
     protected $_platform;
+    // protected $_firebirdVersion; // speichert die Version der aktuellen DB
 
     public function setUp()
     {
-        $doctrineConfiguration = static::getSetUpDoctrineConfiguration();
-        $configurationArray = static::getSetUpDoctrineConfigurationArray();
-        static::installFirebirdDatabase($configurationArray);
-        $this->_entityManager = static::createEntityManager($doctrineConfiguration, $configurationArray);
-        $this->_platform = new FirebirdInterbasePlatform;
+        try
+        {
+            /*
+            $doctrineConfiguration = static::getSetUpDoctrineConfiguration();
+            $configurationArray = static::getSetUpDoctrineConfigurationArray();
+
+            static::installFirebirdDatabase($configurationArray);
+            $this->_entityManager = static::createEntityManager($doctrineConfiguration, $configurationArray);
+            $this->_platform = new FirebirdInterbasePlatform();
+            */
+            
+            $doctrineConfiguration = static::getSetUpDoctrineConfiguration();
+            $configurationArray = static::getSetUpDoctrineConfigurationArray();
+            static::installFirebirdDatabase($configurationArray);
+            $this->_entityManager = static::createEntityManager($doctrineConfiguration, $configurationArray);
+            $this->_platform = new FirebirdInterbasePlatform;
+            $v = $this->GetFirebirdVersion();
+            $this->_platform->SetFBVersion($v);
+        }
+        catch(Exception $exception) 
+        {
+            $fehler = $exception->getMessage();
+            exec("echo \"$fehler\" > /tmp/doctrineErr");
+        }
     }
 
     public function tearDown()
@@ -30,6 +50,22 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
         if ($this->_entityManager) {
             $this->_entityManager->getConnection()->close();
         }
+    }
+    
+    // Verbindung aufbauen und Version der Firebird-DB ermitteln
+    /**
+     * 
+     * 
+     * @return type
+     */
+    public function GetFirebirdVersion() {
+            $connection = $this->_entityManager->getConnection();
+            $sql = $this->_platform->getODSVersionSql();
+            $resultSetFirebirdVersion = $connection->query($sql);
+            $wert = $resultSetFirebirdVersion->fetchColumn();
+            //$this->_firebirdVersion = $this->_platform->getFirebirdVersionFromODSVersion($wert);
+            
+            return $this->_platform->getFirebirdVersionFromODSVersion($wert);
     }
 
     /**
@@ -48,17 +84,21 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
 
     protected static function installFirebirdDatabase(array $configurationArray)
     {
+        return; // Erzeugung einer lokalen DB nicht moeglich ohne Firebird installation, also verwenden wir test-installation
+        
         if (file_exists($configurationArray['dbname'])) {
             unlink($configurationArray['dbname']); // Don't do this outside tests
         }
 
+        exec("echo test1234567 > /tmp/aaa");
+        
         $cmd = sprintf(
             "isql-fb -input %s 2>&1",
             escapeshellarg(ROOT_PATH . "/tests/resources/database_create.sql")
         );
         exec($cmd);
 
-        chmod($configurationArray['dbname'], 0777);
+        // chmod($configurationArray['dbname'], 0777);
 
         $cmd = sprintf(
             "isql-fb %s -input %s -password %s -user %s",
@@ -108,11 +148,22 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
      */
     protected static function getSetUpDoctrineConfigurationArray(array $overrideConfigs = [])
     {
+        // Originales Array
+        /*
         return [
             'host' => 'localhost',
             'dbname' => static::DEFAULT_DATABASE_FILE_PATH,
             'user' => static::DEFAULT_DATABASE_USERNAME,
             'password' => static::DEFAULT_DATABASE_PASSWORD,
+            'charset' => 'UTF-8',
+        ]; */
+        
+         // Test-Array - NICHT IN PRODUKTION VERWENDEN!
+         return [
+            'host' => '10.1.12.200',
+            'dbname' => "/srv/firebird/doctrine.fdb",
+            'user' => "sysdba",
+            'password' => "masterkey",
             'charset' => 'UTF-8',
         ];
     }

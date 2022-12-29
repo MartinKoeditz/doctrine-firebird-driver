@@ -13,4 +13,7 @@
     <logging>
         <log type="coverage-html" target="./coverage" lowUpperBound="35" highLowerBound="70"/>
     </logging>
+    <php>
+	    <const name="ROOT_PATH" value="/var/www/clients/client10/web9/web/v3_inklusiveUnitTests/doctrine-firebird-driver" />
+    </php>
 </phpunit>
