@@ -9,6 +9,40 @@ use Kafoso\DoctrineFirebirdDriver\Platforms\Keywords\FirebirdInterbaseKeywords;
 
 class FirebirdInterbasePlatform extends AbstractPlatform
 {
+    private $FBVERSION_DEFAULTVAL = "UNKNOWN VERSION";
+    private $fbversion = null;
+      
+    /*
+    public function SetEntityManager($em) {
+        $this->entityManager = $em;
+    }
+    */
+    
+    public function SetFBVersion($version) {
+         exec("echo Konstruktor: $version > /tmp/fb6");
+        $this->fbversion = $version;
+    }
+    
+    
+    
+    public function GetFirebirdVersion() {
+        if($this->entityManager != null) {
+            exec("echo entityManager ist nicht null > /tmp/fbv2");
+            
+            $connection = $this->entityManager->getConnection();
+            $sql = $this->getODSVersionSql();
+            $resultSetFirebirdVersion = $connection->query($sql);
+            $wert = $resultSetFirebirdVersion->fetchColumn();
+            //$this->_firebirdVersion = $this->_platform->getFirebirdVersionFromODSVersion($wert);
+            
+            return $this->getFirebirdVersionFromODSVersion($wert);
+        }
+        else {
+            exec("echo entityManager ist auch null > /tmp/fbv2");
+            return null;
+        }
+    }
+    
     /**
      * {@inheritDoc}
      *
@@ -685,6 +719,40 @@ class FirebirdInterbasePlatform extends AbstractPlatform
     {
         return 'SELECT ' . $this->getSequenceNextValFunctionSQL($sequenceName) . ' FROM RDB$DATABASE';
     }
+    
+    /**
+     * Creates the sql-command to determine the ods-version
+     * 
+     * @return string
+     */
+    public function getODSVersionSql() {
+        return "SELECT MON\$ODS_MAJOR FROM MON\$DATABASE";
+    }
+    
+    /** 
+     * Determines the firebird-version based on the given ods-version
+     * 
+     * @param type $version
+     * @return string|real
+     */
+    public function getFirebirdVersionFromODSVersion($version) {
+        
+        
+        switch("$version") {
+            case "10.0": return 1.0; break; // break nach return ist defensiv programmiert
+            case "10.1": return 1.5; break;
+            case "11.0": return 2.0; break;
+            case "11.1": return 2.1; break;
+            case "11.2": return 2.5; break;
+            case "12.0": return 3.0; break;
+            case "13.0": return 4.0; break;
+            default: return $this->FBVERSION_DEFAULTVAL;
+        }
+        
+        return $defaultVal; // Return am ende trotz default in switch aufgrund defensiver programmierung
+    }
+    
+    
 
     /**
      * {@inheritDoc}
@@ -801,7 +869,7 @@ class FirebirdInterbasePlatform extends AbstractPlatform
      *
      * Taken from the PostgreSql-Driver and adapted for Firebird
      */
-    public function getAlterTableSQL(TableDiff $diff)
+    public function getAlterTableSQL(TableDiff $diff, $entityManager = null)
     {
         $sql = [];
         $commentsSQL = [];
@@ -855,13 +923,30 @@ class FirebirdInterbasePlatform extends AbstractPlatform
                 $sql[] = 'ALTER TABLE ' . $diff->getName($this)->getQuotedName($this) . ' ' . $query;
             }
 
+            
             if ($columnDiff->hasChanged('notnull')) {
-                $newNullFlag = $column->getNotnull() ? 1 : 'NULL';
+                $newNullFlag_original = $column->getNotnull() ? 1 : 'NULL';
+                $firebirdVersion = $this->fbversion;
+                $dbgStr = $firebirdVersion == null ? "Ist null" : $firebirdVersion;
+                exec("echo " . $dbgStr  . " > /tmp/fbv");
+                
+                if($firebirdVersion != null && $firebirdVersion != "" && $firebirdVersion < 3) {
+                    $newNullFlag = $newNullFlag_original;
                 $sql[] = 'UPDATE RDB$RELATION_FIELDS SET RDB$NULL_FLAG = ' .
                         $newNullFlag . ' ' .
                         'WHERE UPPER(RDB$FIELD_NAME) = ' .
                         'UPPER(\'' . $columnDiff->getOldColumnName()->getName() . '\') AND ' .
                         'UPPER(RDB$RELATION_NAME) = UPPER(\'' . $diff->getName($this)->getName() . '\')';
+                }
+                else { // Use Syntax for Firebird 3+    
+                    //$null_or_notnull = $column->getNotnull() ? " NOT NULL" : "NULL";   
+                    $null_or_notnull = $column->getNotnull() ? " SET NOT NULL" : " DROP NOT NULL";   
+                    $tabellenname = $diff->getName($this)->getName();
+                    $feldname = $columnDiff->getOldColumnName()->getName();
+                    //$sqlCMD =  "ALTER TABLE $tabellenname ALTER $feldname SET $null_or_notnull;";
+                    $sqlCMD =  "ALTER TABLE $tabellenname ALTER $feldname $null_or_notnull;";
+                    $sql[] = $sqlCMD; 
+                }
             }
 
             if ($columnDiff->hasChanged('autoincrement')) {

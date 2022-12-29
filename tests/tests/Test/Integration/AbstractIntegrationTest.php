@@ -35,8 +35,8 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
             static::installFirebirdDatabase($configurationArray);
             $this->_entityManager = static::createEntityManager($doctrineConfiguration, $configurationArray);
             $this->_platform = new FirebirdInterbasePlatform;
-            $v = $this->GetFirebirdVersion();
-            $this->_platform->SetFBVersion($v);
+            $version = $this->GetFirebirdVersion();
+            $this->_platform->SetFBVersion($version);
         }
         catch(Exception $exception) 
         {
