@@ -82,7 +82,7 @@ interface ResultStatement extends \Traversable
      *
      * @see PDO::FETCH_* constants.
      */
-    public function fetch($fetchMode = null, $cursorOrientation = \PDO::FETCH_ORI_NEXT, $cursorOffset = 0);
+     // public function fetch($fetchMode = null, $cursorOrientation = \PDO::FETCH_ORI_NEXT, $cursorOffset = 0);
 
     /**
      * Returns an array containing all of the result set rows.
