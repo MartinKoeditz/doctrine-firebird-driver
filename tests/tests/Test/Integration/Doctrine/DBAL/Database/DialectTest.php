@@ -14,7 +14,7 @@ class DialectTest extends AbstractIntegrationTest
     /**
      * @override
      */
-    public function setUp()
+    public function setUp(): void
     {
 
     }
