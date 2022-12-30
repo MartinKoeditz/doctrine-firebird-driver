@@ -9,9 +9,11 @@ use Kafoso\DoctrineFirebirdDriver\Platforms\FirebirdInterbasePlatform;
 
 abstract class AbstractIntegrationTest extends \PHPUnit\Framework\TestCase
 {
-    const DEFAULT_DATABASE_FILE_PATH = '/var/lib/firebird/2.5/data/music_library.fdb';
+    const DEFAULT_DATABASE_FILE_PATH = '/opt/firebird/db/music_library.fdb';
     const DEFAULT_DATABASE_USERNAME = 'SYSDBA';
-    const DEFAULT_DATABASE_PASSWORD = '88fb9f307125cc397f70e59c749715e1';
+    const DEFAULT_DATABASE_PASSWORD = 'masterkey';
+    const DEFAULT_DATABASE_HOST = 'localhost';
+    const DEFAULT_ISQLFB_PATH = "/opt/firebird/bin/isql";
 
     protected $_entityManager;
     protected $_platform;
@@ -26,7 +28,7 @@ abstract class AbstractIntegrationTest extends \PHPUnit\Framework\TestCase
     }
 
     public function tearDown(): void
-    {
+    { 
         if ($this->_entityManager) {
             $this->_entityManager->getConnection()->close();
         }
@@ -48,26 +50,34 @@ abstract class AbstractIntegrationTest extends \PHPUnit\Framework\TestCase
 
     protected static function installFirebirdDatabase(array $configurationArray)
     {
+        /*
         if (file_exists($configurationArray['dbname'])) {
             unlink($configurationArray['dbname']); // Don't do this outside tests
         }
+        */
+        
+        $createSqlScript = "SET SQL DIALECT 3;
+                            SET NAMES UTF8;
+                            CREATE DATABASE '" . ($configurationArray['host'] ? $configurationArray['host'] . ':' . $configurationArray['dbname'] : $configurationArray['dbname']) . "' USER '" . $configurationArray['user'] . "' PASSWORD '" . $configurationArray['password'] . "' PAGE_SIZE 16384 DEFAULT CHARACTER SET UTF8;";
+        
+        $fHandle = tmpfile();
+        $path = stream_get_meta_data($fHandle)["uri"];
+        fwrite($fHandle, $createSqlScript);
+        
 
-        $cmd = sprintf(
-            "isql-fb -input %s 2>&1",
-            escapeshellarg(ROOT_PATH . "/tests/resources/database_create.sql")
-        );
+        $cmd = sprintf(self::DEFAULT_ISQLFB_PATH . " -input %s 2>&1", escapeshellarg($path));
         exec($cmd);
-
-        chmod($configurationArray['dbname'], 0777);
-
+        //unlink($path);
+        fclose($fHandle); // close handle here, because cleanup is assumed to delete temporary file
+        
         $cmd = sprintf(
-            "isql-fb %s -input %s -password %s -user %s",
-            escapeshellarg($configurationArray['dbname']),
+            self::DEFAULT_ISQLFB_PATH . " %s -input %s -password %s -user %s",
+            $configurationArray['host'] ? $configurationArray['host'] . ':' . $configurationArray['dbname'] : $configurationArray['dbname'],
             escapeshellarg(ROOT_PATH . "/tests/resources/database_setup.sql"),
             escapeshellarg($configurationArray['password']),
             escapeshellarg($configurationArray['user'])
-        );
-        exec($cmd);
+        );        
+        exec($cmd);  
     }
 
     /**
@@ -109,7 +119,7 @@ abstract class AbstractIntegrationTest extends \PHPUnit\Framework\TestCase
     protected static function getSetUpDoctrineConfigurationArray(array $overrideConfigs = [])
     {
         return [
-            'host' => 'localhost',
+            'host' => static::DEFAULT_DATABASE_HOST,
             'dbname' => static::DEFAULT_DATABASE_FILE_PATH,
             'user' => static::DEFAULT_DATABASE_USERNAME,
             'password' => static::DEFAULT_DATABASE_PASSWORD,
