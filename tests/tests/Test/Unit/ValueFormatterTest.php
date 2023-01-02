@@ -3,7 +3,7 @@ namespace Kafoso\DoctrineFirebirdDriver\Test\Unit\Kafoso\DoctrineFirebirdDriver;
 
 use Kafoso\DoctrineFirebirdDriver\ValueFormatter;
 
-class ConnectionTest extends \PHPUnit_Framework_TestCase
+class ConnectionTest extends \PHPUnit\Framework\TestCase
 {
     public function testEscapeAndQuote()
     {

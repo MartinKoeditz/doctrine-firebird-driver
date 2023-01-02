@@ -7,7 +7,7 @@ use Doctrine\ORM\Configuration;
 use Kafoso\DoctrineFirebirdDriver\Driver\FirebirdInterbase;
 use Kafoso\DoctrineFirebirdDriver\Platforms\FirebirdInterbasePlatform;
 
-abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
+abstract class AbstractIntegrationTest extends \PHPUnit\Framework\TestCase
 {
     const DEFAULT_DATABASE_FILE_PATH = '/var/lib/firebird/2.5/data/music_library.fdb';
     const DEFAULT_DATABASE_USERNAME = 'SYSDBA';
@@ -16,7 +16,7 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
     protected $_entityManager;
     protected $_platform;
 
-    public function setUp()
+    public function setUp(): void
     {
         $doctrineConfiguration = static::getSetUpDoctrineConfiguration();
         $configurationArray = static::getSetUpDoctrineConfigurationArray();
@@ -25,7 +25,7 @@ abstract class AbstractIntegrationTest extends \PHPUnit_Framework_TestCase
         $this->_platform = new FirebirdInterbasePlatform;
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         if ($this->_entityManager) {
             $this->_entityManager->getConnection()->close();
