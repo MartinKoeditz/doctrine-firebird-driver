@@ -4,7 +4,7 @@ namespace Kafoso\DoctrineFirebirdDriver\Test\Unit\Test\Resource\Entity;
 use Doctrine\Common\Collections\Collection;
 use Kafoso\DoctrineFirebirdDriver\Test\Resource\Entity;
 
-class GenreTest extends \PHPUnit_Framework_TestCase
+class GenreTest extends \PHPUnit\Framework\TestCase
 {
     public function testBasics()
     {

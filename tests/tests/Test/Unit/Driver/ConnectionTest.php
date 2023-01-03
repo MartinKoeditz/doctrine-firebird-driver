@@ -3,7 +3,7 @@ namespace Kafoso\DoctrineFirebirdDriver\Test\Unit\Driver;
 
 use Kafoso\DoctrineFirebirdDriver\Driver\FirebirdInterbase\Connection;
 
-class ConnectionTest extends \PHPUnit_Framework_TestCase
+class ConnectionTest extends \PHPUnit\Framework\TestCase
 {
     public function testQuote()
     {

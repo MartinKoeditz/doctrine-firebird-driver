@@ -4,7 +4,7 @@ namespace Kafoso\DoctrineFirebirdDriver\Test\Unit\Driver;
 use Kafoso\DoctrineFirebirdDriver\Driver\FirebirdInterbase\Connection;
 use Kafoso\DoctrineFirebirdDriver\Driver\FirebirdInterbase\Statement;
 
-class StatementTest extends \PHPUnit_Framework_TestCase
+class StatementTest extends \PHPUnit\Framework\TestCase
 {
     public function testBasics()
     {
